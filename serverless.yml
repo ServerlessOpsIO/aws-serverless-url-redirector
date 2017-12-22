@@ -1,0 +1,55 @@
+service: aws-serverless-website-redirector
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: ${opt:stage, env:SLS_STAGE, 'dev'}
+  profile: ${opt:aws-profile, env:AWS_PROFILE, env:AWS_DEFAULT_PROFILE, 'default'}
+
+functions:
+  websiteRedirector:
+    handler: handlers/website-redirector.handler
+    memorySize: 128
+    environment:
+      REDIRECT_LOCATION: ${env:SLS_REDIRECT_LOCATION, 'http://www.example.com'}
+    events:
+      - http:
+          method: any
+          path: ''
+
+resources:
+  Resources:
+    ProxyResource:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        ParentId:
+          Fn::GetAtt:
+            - ApiGatewayRestApi # our default Rest API logical ID
+            - RootResourceId
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        PathPart: "{proxy+}"
+    ProxyMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        ResourceId:
+          Ref: ProxyResource
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        HttpMethod: ANY
+        AuthorizationType: NONE
+        Integration:
+          Type: AWS_PROXY
+          Uri:
+            Fn::Join:
+              - ""
+              - - "arn:aws:apigateway:"
+                - Ref: "AWS::Region"
+                - ":lambda:path/2015-03-31/functions/"
+                - Fn::GetAtt:
+                  - "WebsiteRedirectorLambdaFunction"
+                  - "Arn"
+                - "/invocations"
+          IntegrationHttpMethod: POST
+
+
