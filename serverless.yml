@@ -12,6 +12,7 @@ functions:
     memorySize: 128
     environment:
       REDIRECT_LOCATION: ${env:SLS_REDIRECT_LOCATION, 'http://www.example.com'}
+      STATUS_CODE: ${env:SLS_STATUS_CODE, '301'}
     events:
       - http:
           method: any

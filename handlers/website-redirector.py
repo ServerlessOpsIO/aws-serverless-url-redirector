@@ -4,6 +4,7 @@ Return a redirect location set in the environment.
 import os
 
 REDIRECT_LOCATION = os.environ.get('REDIRECT_LOCATION')
+STATUS_CODE = int(os.environ.get('STATUS_CODE'))
 
 def handler(event, context):
     path = event.get('path')
@@ -12,7 +13,7 @@ def handler(event, context):
 
     # Need to get URL from request so I can return full path
     return {
-        'statusCode': 302,
+        'statusCode': STATUS_CODE,
         'headers': {
             'Location': location
         }
