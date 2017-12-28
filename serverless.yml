@@ -1,9 +1,10 @@
 service: aws-serverless-website-redirector
 
 custom:
-  svc_domain: ${env:SLS_SVC_DOMAIN, 'example.com'}
+  service_location: ${env:SLS_SERVICE_LOCATION, 'example.com'}
+  service_domain: ${env:SLS_SERVICE_DOMAIN, env:SLS_SERVICE_LOCATION, 'example.com'}
   redirect_protocol: ${env:SLS_REDIRECT_PROTOCOL, 'https'}
-  redirect_domain: ${env:SLS_REDIRECT_DOMAIN, 'www.example.com'}
+  redirect_location: ${env:SLS_REDIRECT_LOCATION, 'www.example.com'}
 
 provider:
   name: aws
@@ -16,7 +17,7 @@ functions:
     handler: handlers/website-redirector.handler
     memorySize: 128
     environment:
-      REDIRECT_LOCATION: "${self:custom.redirect_protocol}://${self:custom.redirect_domain}"
+      REDIRECT_LOCATION: "${self:custom.redirect_protocol}://${self:custom.redirect_location}"
       STATUS_CODE: ${env:SLS_STATUS_CODE, '301'}
       LOG_LEVEL: INFO
     events:
@@ -63,18 +64,17 @@ resources:
     Certificate:
       Type: "AWS::CertificateManager::Certificate"
       Properties:
-        DomainName: ${self:custom.svc_domain}
+        DomainName: ${self:custom.service_location}
         DomainValidationOptions:
-        - DomainName: ${self:custom.svc_domain}
-          ValidationDomain: ${self:custom.svc_domain}
+        - DomainName: ${self:custom.service_location}
+          ValidationDomain: ${self:custom.service_domain}
 
-    # How do you invalidate CloudFront on changes?
     DomainName:
       Type: "AWS::ApiGateway::DomainName"
       Properties:
         CertificateArn:
           Ref: Certificate
-        DomainName: ${self:custom.svc_domain}
+        DomainName: ${self:custom.service_location}
 
     BasePathMapping:
       Type: "AWS::ApiGateway::BasePathMapping"
@@ -88,10 +88,10 @@ resources:
     Route53Rr:
       Type: "AWS::Route53::RecordSet"
       Properties:
-        HostedZoneName: "${self:custom.svc_domain}."
+        HostedZoneName: "${self:custom.service_domain}."
         Comment: "URL redirection service"
         Type: "A"
-        Name: ${self:custom.svc_domain}
+        Name: ${self:custom.service_location}
         AliasTarget:
           HostedZoneId: "Z2FDTNDATAQYW2"
           DNSName:
