@@ -18,7 +18,12 @@ def handler(event, context):
 
     path = event.get('path')
 
-    location = REDIRECT_LOCATION + event.get('path', '/')
+    query_parameters = event.get('queryStringParameters') or {}
+    query_parameter_list = []
+    for k in query_parameters:
+        query_parameter_list.append('{}={}'.format(k, query_parameters.get(k)))
+
+    location = REDIRECT_LOCATION + event.get('path', '/') + '?' + '&'.join(query_parameter_list)
 
     # Need to get URL from request so I can return full path
     return {
