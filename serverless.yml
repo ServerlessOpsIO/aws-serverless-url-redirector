@@ -1,4 +1,4 @@
-service: aws-serverless-website-redirector
+service: aws-serverless-url-redirector
 
 custom:
   service_location: ${env:SLS_SERVICE_LOCATION, 'example.com'}
@@ -13,8 +13,8 @@ provider:
   profile: ${opt:aws-profile, env:AWS_PROFILE, env:AWS_DEFAULT_PROFILE, 'default'}
 
 functions:
-  websiteRedirector:
-    handler: handlers/website-redirector.handler
+  urlRedirector:
+    handler: handlers/url-redirector.handler
     memorySize: 128
     environment:
       REDIRECT_LOCATION: "${self:custom.redirect_protocol}://${self:custom.redirect_location}"
@@ -56,7 +56,7 @@ resources:
                 - Ref: "AWS::Region"
                 - ":lambda:path/2015-03-31/functions/"
                 - Fn::GetAtt:
-                  - "WebsiteRedirectorLambdaFunction"
+                  - "UrlRedirectorLambdaFunction"
                   - "Arn"
                 - "/invocations"
           IntegrationHttpMethod: POST
